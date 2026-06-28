@@ -9,23 +9,23 @@ import (
 	"context"
 )
 
-const getUserByEmail = `-- name: GetUserByEmail :one
+const getUserByEmailOrUsername = `-- name: GetUserByEmailOrUsername :one
 SELECT id, username, email, password_hash
 FROM users
-WHERE email = $1
+WHERE email = $1 OR username = $1
 LIMIT 1
 `
 
-type GetUserByEmailRow struct {
+type GetUserByEmailOrUsernameRow struct {
 	ID           int32  `json:"id"`
 	Username     string `json:"username"`
 	Email        string `json:"email"`
 	PasswordHash string `json:"passwordHash"`
 }
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
-	row := q.queryRow(ctx, q.getUserByEmailStmt, getUserByEmail, email)
-	var i GetUserByEmailRow
+func (q *Queries) GetUserByEmailOrUsername(ctx context.Context, email string) (GetUserByEmailOrUsernameRow, error) {
+	row := q.queryRow(ctx, q.getUserByEmailOrUsernameStmt, getUserByEmailOrUsername, email)
+	var i GetUserByEmailOrUsernameRow
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
