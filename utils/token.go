@@ -10,8 +10,8 @@ import (
 
 // TokenParams holds parameters needed to generate a token
 type TokenParams struct {
-	ID   string
-	Role string // e.g. "admin" | "user"
+	ID string
+	// Role string // e.g. "admin" | "user"
 }
 
 // CustomClaims is the JWT claims structure
@@ -23,10 +23,10 @@ type CustomClaims struct {
 // ParseToken generates a JWT token with 24h expiry
 func ParseToken(params TokenParams) (string, error) {
 	claims := jwt.MapClaims{
-		"id":   params.ID,
-		"sub":  params.ID,
-		"exp":  time.Now().Add(24 * time.Hour).Unix(),
-		"role": params.Role,
+		"id":  params.ID,
+		"sub": params.ID,
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
+		// "role": params.Role,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(config.Application.JWT.SecretKey))
@@ -35,10 +35,10 @@ func ParseToken(params TokenParams) (string, error) {
 // ParseTokenWithExpiration generates a JWT token with a custom expiry duration
 func ParseTokenWithExpiration(params TokenParams, expiration time.Duration) (string, error) {
 	claims := jwt.MapClaims{
-		"id":   params.ID,
-		"sub":  params.ID,
-		"exp":  time.Now().Add(expiration).Unix(),
-		"role": params.Role,
+		"id":  params.ID,
+		"sub": params.ID,
+		"exp": time.Now().Add(expiration).Unix(),
+		// "role": params.Role,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(config.Application.JWT.SecretKey))
