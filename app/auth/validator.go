@@ -15,21 +15,20 @@ type loginRequest struct {
 // registerRequest is the request body for registration
 type registerRequest struct {
 	Email    string `json:"email"`
-	Name     string `json:"name"`
+	Username string `json:"name"`
 	Password string `json:"password"`
-	Role     string `json:"role"`
 }
 
-// forgotPasswordRequest is the request body for forgot password
-type forgotPasswordRequest struct {
-	Email string `json:"email"`
-}
+// // forgotPasswordRequest is the request body for forgot password
+// type forgotPasswordRequest struct {
+// 	Email string `json:"email"`
+// }
 
-// resetPasswordRequest is the request body for reset password
-type resetPasswordRequest struct {
-	Token       string `json:"token"`
-	NewPassword string `json:"new_password"`
-}
+// // resetPasswordRequest is the request body for reset password
+// type resetPasswordRequest struct {
+// 	Token       string `json:"token"`
+// 	NewPassword string `json:"new_password"`
+// }
 
 // ValidateLoginInput validates the login request body
 func ValidateLoginInput(c echo.Context) (*utils.NetworkAPIError, *loginRequest) {
@@ -78,7 +77,7 @@ func ValidateRegisterInput(c echo.Context) (*utils.NetworkAPIError, *registerReq
 		)
 		return &e, nil
 	}
-	if req.Name == "" {
+	if req.Username == "" {
 		e := utils.NewError("Nama harus diisi",
 			utils.WithLocation("body"),
 			utils.WithPath("name"),
@@ -97,55 +96,55 @@ func ValidateRegisterInput(c echo.Context) (*utils.NetworkAPIError, *registerReq
 	return nil, &req
 }
 
-// ValidateForgotPasswordInput validates the forgot password request body
-func ValidateForgotPasswordInput(c echo.Context) (*utils.NetworkAPIError, string) {
-	var req forgotPasswordRequest
-	if err := c.Bind(&req); err != nil {
-		e := utils.NewError("Request Body tidak valid",
-			utils.WithLocation("body"),
-			utils.WithType("invalid"),
-		)
-		return &e, ""
-	}
-	if req.Email == "" || !utils.IsValidEmail(req.Email) {
-		e := utils.NewError("Email tidak valid atau tidak diisi",
-			utils.WithLocation("body"),
-			utils.WithPath("email"),
-			utils.WithType("required"),
-		)
-		return &e, ""
-	}
-	return nil, req.Email
-}
+// // ValidateForgotPasswordInput validates the forgot password request body
+// func ValidateForgotPasswordInput(c echo.Context) (*utils.NetworkAPIError, string) {
+// 	var req forgotPasswordRequest
+// 	if err := c.Bind(&req); err != nil {
+// 		e := utils.NewError("Request Body tidak valid",
+// 			utils.WithLocation("body"),
+// 			utils.WithType("invalid"),
+// 		)
+// 		return &e, ""
+// 	}
+// 	if req.Email == "" || !utils.IsValidEmail(req.Email) {
+// 		e := utils.NewError("Email tidak valid atau tidak diisi",
+// 			utils.WithLocation("body"),
+// 			utils.WithPath("email"),
+// 			utils.WithType("required"),
+// 		)
+// 		return &e, ""
+// 	}
+// 	return nil, req.Email
+// }
 
-// ValidateResetPasswordInput validates the reset password request body
-func ValidateResetPasswordInput(c echo.Context) (*utils.NetworkAPIError, string, string) {
-	var req resetPasswordRequest
-	if err := c.Bind(&req); err != nil {
-		e := utils.NewError("Request Body tidak valid",
-			utils.WithLocation("body"),
-			utils.WithType("invalid"),
-		)
-		return &e, "", ""
-	}
-	if req.Token == "" {
-		e := utils.NewError("Token harus diisi",
-			utils.WithLocation("body"),
-			utils.WithPath("token"),
-			utils.WithType("required"),
-		)
-		return &e, "", ""
-	}
-	if req.NewPassword == "" {
-		e := utils.NewError("Password baru harus diisi",
-			utils.WithLocation("body"),
-			utils.WithPath("new_password"),
-			utils.WithType("required"),
-		)
-		return &e, "", ""
-	}
-	return nil, req.Token, req.NewPassword
-}
+// // ValidateResetPasswordInput validates the reset password request body
+// func ValidateResetPasswordInput(c echo.Context) (*utils.NetworkAPIError, string, string) {
+// 	var req resetPasswordRequest
+// 	if err := c.Bind(&req); err != nil {
+// 		e := utils.NewError("Request Body tidak valid",
+// 			utils.WithLocation("body"),
+// 			utils.WithType("invalid"),
+// 		)
+// 		return &e, "", ""
+// 	}
+// 	if req.Token == "" {
+// 		e := utils.NewError("Token harus diisi",
+// 			utils.WithLocation("body"),
+// 			utils.WithPath("token"),
+// 			utils.WithType("required"),
+// 		)
+// 		return &e, "", ""
+// 	}
+// 	if req.NewPassword == "" {
+// 		e := utils.NewError("Password baru harus diisi",
+// 			utils.WithLocation("body"),
+// 			utils.WithPath("new_password"),
+// 			utils.WithType("required"),
+// 		)
+// 		return &e, "", ""
+// 	}
+// 	return nil, req.Token, req.NewPassword
+// }
 
 // ValidateBearerToken extracts and validates the Authorization Bearer token
 func ValidateBearerToken(c echo.Context) (*utils.NetworkAPIError, string) {

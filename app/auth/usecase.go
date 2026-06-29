@@ -32,9 +32,9 @@ func (u *Usecase) Login(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	user, err := u.repo.GetUserByEmailOrUsername(ctx, req.Email)
+	user, err := u.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		log.Println("Login - GetUserByEmailOrUsername error:", err)
+		log.Println("Login - GetUserByEmail error:", err)
 		return c.JSON(http.StatusUnauthorized, utils.ResponseError("Email atau password salah"))
 	}
 
@@ -43,8 +43,8 @@ func (u *Usecase) Login(c echo.Context) error {
 	}
 
 	token, err := utils.ParseToken(utils.TokenParams{
-		ID:   utils.ToString(user.ID),
-		Role: "user",
+		ID: user.ID.String(),
+		// Role: "user",
 	})
 	if err != nil {
 		log.Println("Login - ParseToken error:", err)
@@ -55,58 +55,50 @@ func (u *Usecase) Login(c echo.Context) error {
 		"token": token,
 		"user": map[string]interface{}{
 			"id":    user.ID,
-			"name":  user.Name,
+			"name":  user.Username,
 			"email": user.Email,
-			"role":  user.Role,
+			// "role":  user.Role,
 		},
 	}))
 }
 
 // // Register handles new user registration
-// func (u *Usecase) Register(c echo.Context) error {
-// 	apiErr, req := ValidateRegisterInput(c)
-// 	if apiErr != nil {
-// 		return c.JSON(http.StatusBadRequest, apiErr)
-// 	}
+func (u *Usecase) Register(c echo.Context) error {
+	apiErr, req := ValidateRegisterInput(c)
+	if apiErr != nil {
+		return c.JSON(http.StatusBadRequest, apiErr)
+	}
 
-// 	ctx := c.Request().Context()
+	ctx := c.Request().Context()
 
-// 	// Check if email is already taken
-// 	existing, _ := u.repo.GetUserByEmail(ctx, req.Email)
-// 	if existing != nil {
-// 		return c.JSON(http.StatusConflict, utils.ResponseError("Email sudah digunakan"))
-// 	}
+	// Check if email is already taken
+	_, err := u.repo.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		return c.JSON(http.StatusConflict, utils.ResponseError("Email sudah digunakan"))
+	}
 
-// 	hashedPassword, err := utils.HashPassword(req.Password)
-// 	if err != nil {
-// 		log.Println("Register - HashPassword error:", err)
-// 		return c.JSON(http.StatusInternalServerError, utils.ResponseError("Gagal memproses password"))
-// 	}
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		log.Println("Register - HashPassword error:", err)
+		return c.JSON(http.StatusInternalServerError, utils.ResponseError("Gagal memproses password"))
+	}
 
-// 	role := req.Role
-// 	if role == "" {
-// 		role = "user"
-// 	}
+	newID, err := u.repo.CreateUser(ctx, repository.CreateUserParams{
+		Email:        req.Email,
+		Username:     req.Username,
+		PasswordHash: hashedPassword,
+	})
+	if err != nil {
+		log.Println("Register - CreateUser error:", err)
+		return c.JSON(http.StatusInternalServerError, utils.ResponseError("Gagal mendaftarkan pengguna"))
+	}
 
-// 	newID, err := u.repo.CreateUser(ctx, repository.CreateUserParams{
-// 		Email:    req.Email,
-// 		Name:     req.Name,
-// 		Password: hashedPassword,
-// 		Role:     role,
-// 		IsActive: true,
-// 	})
-// 	if err != nil {
-// 		log.Println("Register - CreateUser error:", err)
-// 		return c.JSON(http.StatusInternalServerError, utils.ResponseError("Gagal mendaftarkan pengguna"))
-// 	}
-
-// 	return c.JSON(http.StatusCreated, utils.ResponseOK(map[string]interface{}{
-// 		"id":    newID,
-// 		"email": req.Email,
-// 		"name":  req.Name,
-// 		"role":  role,
-// 	}))
-// }
+	return c.JSON(http.StatusCreated, utils.ResponseOK(map[string]interface{}{
+		"id":       newID,
+		"email":    req.Email,
+		"username": req.Username,
+	}))
+}
 
 // // ValidateToken validates a Bearer token from the Authorization header
 // func (u *Usecase) ValidateToken(c echo.Context) error {

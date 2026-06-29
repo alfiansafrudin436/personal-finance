@@ -7,7 +7,9 @@ package repository
 
 import (
 	"context"
-	"database/sql"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 const deactivateUser = `-- name: DeactivateUser :exec
@@ -17,7 +19,7 @@ SET is_active = false,
 WHERE id = $1
 `
 
-func (q *Queries) DeactivateUser(ctx context.Context, id int32) error {
+func (q *Queries) DeactivateUser(ctx context.Context, id uuid.UUID) error {
 	_, err := q.exec(ctx, q.deactivateUserStmt, deactivateUser, id)
 	return err
 }
@@ -28,11 +30,11 @@ FROM users
 `
 
 type GetAllUsersRow struct {
-	ID        int32        `json:"id"`
-	Username  string       `json:"username"`
-	Email     string       `json:"email"`
-	IsActive  sql.NullBool `json:"isActive"`
-	CreatedAt sql.NullTime `json:"createdAt"`
+	ID        uuid.UUID `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	IsActive  bool      `json:"isActive"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 func (q *Queries) GetAllUsers(ctx context.Context) ([]GetAllUsersRow, error) {
@@ -72,10 +74,10 @@ LIMIT 1
 `
 
 type GetUserByEmailRow struct {
-	ID           int32  `json:"id"`
-	Username     string `json:"username"`
-	Email        string `json:"email"`
-	PasswordHash string `json:"passwordHash"`
+	ID           uuid.UUID `json:"id"`
+	Username     string    `json:"username"`
+	Email        string    `json:"email"`
+	PasswordHash string    `json:"passwordHash"`
 }
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
@@ -98,12 +100,12 @@ LIMIT 1
 `
 
 type GetUserByIDRow struct {
-	ID       int32  `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	Email    string    `json:"email"`
 }
 
-func (q *Queries) GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, error) {
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error) {
 	row := q.queryRow(ctx, q.getUserByIDStmt, getUserByID, id)
 	var i GetUserByIDRow
 	err := row.Scan(&i.ID, &i.Username, &i.Email)
@@ -118,8 +120,8 @@ WHERE id = $1
 `
 
 type UpdateUserUsernameParams struct {
-	ID       int32  `json:"id"`
-	Username string `json:"username"`
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
 }
 
 func (q *Queries) UpdateUserUsername(ctx context.Context, arg UpdateUserUsernameParams) error {

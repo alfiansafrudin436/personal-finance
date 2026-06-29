@@ -7,43 +7,49 @@ package repository
 import (
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Account struct {
-	ID        int32          `json:"id"`
-	UserID    int32          `json:"userId"`
-	Name      string         `json:"name"`
-	Type      interface{}    `json:"type"`
-	Balance   sql.NullString `json:"balance"`
-	CreatedAt sql.NullTime   `json:"createdAt"`
+	ID        uuid.UUID   `json:"id"`
+	UserID    uuid.UUID   `json:"userId"`
+	Name      string      `json:"name"`
+	Type      interface{} `json:"type"`
+	Balance   string      `json:"balance"`
+	CreatedAt time.Time   `json:"createdAt"`
+	UpdatedAt time.Time   `json:"updatedAt"`
 }
 
 type Category struct {
-	ID     int32          `json:"id"`
-	UserID sql.NullInt32  `json:"userId"`
-	Name   string         `json:"name"`
-	Type   interface{}    `json:"type"`
-	Icon   sql.NullString `json:"icon"`
+	ID        uuid.UUID      `json:"id"`
+	UserID    uuid.NullUUID  `json:"userId"`
+	Name      string         `json:"name"`
+	Type      interface{}    `json:"type"`
+	Icon      sql.NullString `json:"icon"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
 }
 
 type Transaction struct {
-	ID              int32          `json:"id"`
-	UserID          int32          `json:"userId"`
-	AccountID       int32          `json:"accountId"`
-	CategoryID      int32          `json:"categoryId"`
-	ToAccountID     sql.NullInt32  `json:"toAccountId"`
+	ID              uuid.UUID      `json:"id"`
+	UserID          uuid.UUID      `json:"userId"`
+	AccountID       uuid.UUID      `json:"accountId"`
+	CategoryID      uuid.UUID      `json:"categoryId"`
+	ToAccountID     uuid.NullUUID  `json:"toAccountId"`
 	Amount          string         `json:"amount"`
 	TransactionDate time.Time      `json:"transactionDate"`
 	Description     sql.NullString `json:"description"`
-	CreatedAt       sql.NullTime   `json:"createdAt"`
+	CreatedAt       time.Time      `json:"createdAt"`
+	UpdatedAt       time.Time      `json:"updatedAt"`
 }
 
 type User struct {
-	ID           int32        `json:"id"`
-	Username     string       `json:"username"`
-	IsActive     sql.NullBool `json:"isActive"`
-	Email        string       `json:"email"`
-	PasswordHash string       `json:"passwordHash"`
-	CreatedAt    sql.NullTime `json:"createdAt"`
-	UpdatedAt    sql.NullTime `json:"updatedAt"`
+	ID           uuid.UUID `json:"id"`
+	Username     string    `json:"username"`
+	IsActive     bool      `json:"isActive"`
+	Email        string    `json:"email"`
+	PasswordHash string    `json:"passwordHash"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }

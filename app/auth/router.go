@@ -9,8 +9,8 @@ func RegisterRoutes(g *echo.Group) {
 	u := NewUsecase()
 	g.POST("/login", u.Login)
 	g.POST("/register", u.Register)
-	g.GET("/validate", u.ValidateToken)
-	g.GET("/refresh", u.RefreshToken)
-	g.POST("/forgot-password", u.ForgotPassword)
-	g.POST("/reset-password", u.ResetPassword)
+	// g.GET("/validate", u.ValidateToken)
+	// g.GET("/refresh", u.RefreshToken)
+	// g.POST("/forgot-password", u.ForgotPassword)
+	// g.POST("/reset-password", u.ResetPassword)
 }

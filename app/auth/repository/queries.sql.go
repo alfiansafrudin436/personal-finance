@@ -7,25 +7,46 @@ package repository
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
-const getUserByEmailOrUsername = `-- name: GetUserByEmailOrUsername :one
-SELECT id, username, email, password_hash
-FROM users
-WHERE email = $1 OR username = $1
-LIMIT 1
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (email, username, password_hash, created_at)
+VALUES ($1, $2, $3, now())
+RETURNING id
 `
 
-type GetUserByEmailOrUsernameRow struct {
-	ID           int32  `json:"id"`
-	Username     string `json:"username"`
+type CreateUserParams struct {
 	Email        string `json:"email"`
+	Username     string `json:"username"`
 	PasswordHash string `json:"passwordHash"`
 }
 
-func (q *Queries) GetUserByEmailOrUsername(ctx context.Context, email string) (GetUserByEmailOrUsernameRow, error) {
-	row := q.queryRow(ctx, q.getUserByEmailOrUsernameStmt, getUserByEmailOrUsername, email)
-	var i GetUserByEmailOrUsernameRow
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error) {
+	row := q.queryRow(ctx, q.createUserStmt, createUser, arg.Email, arg.Username, arg.PasswordHash)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, username, email, password_hash
+FROM users
+WHERE email = $1
+LIMIT 1
+`
+
+type GetUserByEmailRow struct {
+	ID           uuid.UUID `json:"id"`
+	Username     string    `json:"username"`
+	Email        string    `json:"email"`
+	PasswordHash string    `json:"passwordHash"`
+}
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
+	row := q.queryRow(ctx, q.getUserByEmailStmt, getUserByEmail, email)
+	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
