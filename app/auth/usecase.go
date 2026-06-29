@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 	"personal-finance/app/auth/repository"
@@ -73,7 +75,7 @@ func (u *Usecase) Register(c echo.Context) error {
 
 	// Check if email is already taken
 	_, err := u.repo.GetUserByEmail(ctx, req.Email)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return c.JSON(http.StatusConflict, utils.ResponseError("Email sudah digunakan"))
 	}
 
