@@ -30,6 +30,15 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getUserByEmailStmt, err = db.PrepareContext(ctx, getUserByEmail); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserByEmail: %w", err)
 	}
+	if q.getUserByResetTokenStmt, err = db.PrepareContext(ctx, getUserByResetToken); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserByResetToken: %w", err)
+	}
+	if q.updateUserPasswordStmt, err = db.PrepareContext(ctx, updateUserPassword); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUserPassword: %w", err)
+	}
+	if q.updateUserResetTokenStmt, err = db.PrepareContext(ctx, updateUserResetToken); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUserResetToken: %w", err)
+	}
 	return &q, nil
 }
 
@@ -43,6 +52,21 @@ func (q *Queries) Close() error {
 	if q.getUserByEmailStmt != nil {
 		if cerr := q.getUserByEmailStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserByEmailStmt: %w", cerr)
+		}
+	}
+	if q.getUserByResetTokenStmt != nil {
+		if cerr := q.getUserByResetTokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserByResetTokenStmt: %w", cerr)
+		}
+	}
+	if q.updateUserPasswordStmt != nil {
+		if cerr := q.updateUserPasswordStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserPasswordStmt: %w", cerr)
+		}
+	}
+	if q.updateUserResetTokenStmt != nil {
+		if cerr := q.updateUserResetTokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserResetTokenStmt: %w", cerr)
 		}
 	}
 	return err
@@ -82,17 +106,23 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                 DBTX
-	tx                 *sql.Tx
-	createUserStmt     *sql.Stmt
-	getUserByEmailStmt *sql.Stmt
+	db                       DBTX
+	tx                       *sql.Tx
+	createUserStmt           *sql.Stmt
+	getUserByEmailStmt       *sql.Stmt
+	getUserByResetTokenStmt  *sql.Stmt
+	updateUserPasswordStmt   *sql.Stmt
+	updateUserResetTokenStmt *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                 tx,
-		tx:                 tx,
-		createUserStmt:     q.createUserStmt,
-		getUserByEmailStmt: q.getUserByEmailStmt,
+		db:                       tx,
+		tx:                       tx,
+		createUserStmt:           q.createUserStmt,
+		getUserByEmailStmt:       q.getUserByEmailStmt,
+		getUserByResetTokenStmt:  q.getUserByResetTokenStmt,
+		updateUserPasswordStmt:   q.updateUserPasswordStmt,
+		updateUserResetTokenStmt: q.updateUserResetTokenStmt,
 	}
 }

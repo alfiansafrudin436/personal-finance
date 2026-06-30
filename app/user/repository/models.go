@@ -45,11 +45,12 @@ type Transaction struct {
 }
 
 type User struct {
-	ID           uuid.UUID `json:"id"`
-	Username     string    `json:"username"`
-	IsActive     bool      `json:"isActive"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"passwordHash"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
+	ID                 uuid.UUID      `json:"id"`
+	Username           string         `json:"username"`
+	IsActive           bool           `json:"isActive"`
+	Email              string         `json:"email"`
+	PasswordHash       string         `json:"passwordHash"`
+	CreatedAt          time.Time      `json:"createdAt"`
+	UpdatedAt          time.Time      `json:"updatedAt"`
+	ResetPasswordToken sql.NullString `json:"resetPasswordToken"`
 }

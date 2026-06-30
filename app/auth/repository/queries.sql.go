@@ -7,6 +7,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -54,4 +55,59 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.PasswordHash,
 	)
 	return i, err
+}
+
+const getUserByResetToken = `-- name: GetUserByResetToken :one
+SELECT id, username, email
+FROM users
+WHERE reset_password_token = $1
+LIMIT 1
+`
+
+type GetUserByResetTokenRow struct {
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	Email    string    `json:"email"`
+}
+
+func (q *Queries) GetUserByResetToken(ctx context.Context, resetPasswordToken sql.NullString) (GetUserByResetTokenRow, error) {
+	row := q.queryRow(ctx, q.getUserByResetTokenStmt, getUserByResetToken, resetPasswordToken)
+	var i GetUserByResetTokenRow
+	err := row.Scan(&i.ID, &i.Username, &i.Email)
+	return i, err
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE users
+SET password_hash = $2,
+    reset_password_token = null,
+    updated_at = now()
+WHERE id = $1
+`
+
+type UpdateUserPasswordParams struct {
+	ID           uuid.UUID `json:"id"`
+	PasswordHash string    `json:"passwordHash"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.exec(ctx, q.updateUserPasswordStmt, updateUserPassword, arg.ID, arg.PasswordHash)
+	return err
+}
+
+const updateUserResetToken = `-- name: UpdateUserResetToken :exec
+UPDATE users
+SET reset_password_token = $2,
+    updated_at = now()
+WHERE id = $1
+`
+
+type UpdateUserResetTokenParams struct {
+	ID                 uuid.UUID      `json:"id"`
+	ResetPasswordToken sql.NullString `json:"resetPasswordToken"`
+}
+
+func (q *Queries) UpdateUserResetToken(ctx context.Context, arg UpdateUserResetTokenParams) error {
+	_, err := q.exec(ctx, q.updateUserResetTokenStmt, updateUserResetToken, arg.ID, arg.ResetPasswordToken)
+	return err
 }

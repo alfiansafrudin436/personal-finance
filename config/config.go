@@ -21,17 +21,7 @@ import (
 var Application *App
 
 // InitConfig loads env and initializes database
-func (a *App) InitConfig() error {
-	Application = &App{}
-	var err error
-	Application.initENV()
-	if err = Application.initDatabase(); err != nil {
-		log.Println("Database connection Error", err)
-		return err
-	}
-	return nil
-}
-
+// Load semua env di initENV() sekali saja
 func (a *App) initENV() error {
 	var err error
 	if err = godotenv.Load(".env"); err != nil {
@@ -41,6 +31,25 @@ func (a *App) initENV() error {
 		return err
 	}
 	return err
+}
+
+// InitConfig() load env SEKALI SAJA
+func (a *App) InitConfig() error {
+	Application = &App{}
+	var err error
+
+	// Load ENV hanya sekali di sini
+	if err = Application.initENV(); err != nil {
+		return err
+	}
+
+	// Init database
+	if err = Application.initDatabase(); err != nil {
+		log.Println("Database connection Error", err)
+		return err
+	}
+
+	return nil
 }
 
 func (a *App) initDatabase() error {
@@ -68,14 +77,14 @@ func (a *App) initDatabase() error {
 // GetJWTConfig returns the JWT config
 func GetJWTConfig() JWTConfig {
 	Application = &App{}
-	Application.initENV()
+	// Application.initENV()
 	return Application.JWT
 }
 
 // GetSMTPConfig returns the SMTP config
 func GetSMTPConfig() SMTPConfig {
 	Application = &App{}
-	Application.initENV()
+	// Application.initENV()
 	return Application.SMTP
 }
 
@@ -110,12 +119,12 @@ func (a *App) sendViaPostalAPI(to, subject, content string, cc, bcc []string) er
 	}
 
 	payload := map[string]interface{}{
-		"to":         toAddresses,
-		"sender":     config.EmailSender,
-		"from":       config.FromAddress,
-		"tag":        "transactional",
-		"subject":    subject,
-		"html_body":  content,
+		"to":        toAddresses,
+		"sender":    config.EmailSender,
+		"from":      config.FromAddress,
+		"tag":       "transactional",
+		"subject":   subject,
+		"html_body": content,
 	}
 
 	if len(cc) > 0 {
