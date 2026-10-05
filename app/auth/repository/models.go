@@ -6,27 +6,130 @@ package repository
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+type AccountType string
+
+const (
+	AccountTypeCash       AccountType = "cash"
+	AccountTypeBank       AccountType = "bank"
+	AccountTypeEWallet    AccountType = "e_wallet"
+	AccountTypeCreditCard AccountType = "credit_card"
+	AccountTypeInvestment AccountType = "investment"
+)
+
+func (e *AccountType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AccountType(s)
+	case string:
+		*e = AccountType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AccountType: %T", src)
+	}
+	return nil
+}
+
+type NullAccountType struct {
+	AccountType AccountType `json:"accountType"`
+	Valid       bool        `json:"valid"` // Valid is true if AccountType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAccountType) Scan(value interface{}) error {
+	if value == nil {
+		ns.AccountType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AccountType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAccountType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AccountType), nil
+}
+
+type CategoryType string
+
+const (
+	CategoryTypeIncome   CategoryType = "income"
+	CategoryTypeExpense  CategoryType = "expense"
+	CategoryTypeTransfer CategoryType = "transfer"
+)
+
+func (e *CategoryType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CategoryType(s)
+	case string:
+		*e = CategoryType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CategoryType: %T", src)
+	}
+	return nil
+}
+
+type NullCategoryType struct {
+	CategoryType CategoryType `json:"categoryType"`
+	Valid        bool         `json:"valid"` // Valid is true if CategoryType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCategoryType) Scan(value interface{}) error {
+	if value == nil {
+		ns.CategoryType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CategoryType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCategoryType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.CategoryType), nil
+}
+
 type Account struct {
-	ID        uuid.UUID   `json:"id"`
-	UserID    uuid.UUID   `json:"userId"`
-	Name      string      `json:"name"`
-	Type      interface{} `json:"type"`
-	Balance   string      `json:"balance"`
-	CreatedAt time.Time   `json:"createdAt"`
-	UpdatedAt time.Time   `json:"updatedAt"`
+	ID         uuid.UUID   `json:"id"`
+	UserID     uuid.UUID   `json:"userId"`
+	Name       string      `json:"name"`
+	Type       AccountType `json:"type"`
+	Balance    string      `json:"balance"`
+	Currency   string      `json:"currency"`
+	IsArchived bool        `json:"isArchived"`
+	CreatedAt  time.Time   `json:"createdAt"`
+	UpdatedAt  time.Time   `json:"updatedAt"`
+}
+
+type Budget struct {
+	ID          uuid.UUID `json:"id"`
+	UserID      uuid.UUID `json:"userId"`
+	CategoryID  uuid.UUID `json:"categoryId"`
+	Amount      string    `json:"amount"`
+	PeriodMonth time.Time `json:"periodMonth"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 type Category struct {
 	ID        uuid.UUID      `json:"id"`
 	UserID    uuid.NullUUID  `json:"userId"`
 	Name      string         `json:"name"`
-	Type      interface{}    `json:"type"`
+	Type      CategoryType   `json:"type"`
 	Icon      sql.NullString `json:"icon"`
+	Color     sql.NullString `json:"color"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 }
