@@ -4,7 +4,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"personal-finance/app/account"
 	"personal-finance/app/auth"
+	"personal-finance/app/budget"
+	"personal-finance/app/category"
+	"personal-finance/app/report"
+	"personal-finance/app/transaction"
 	"personal-finance/app/user"
 	"personal-finance/config"
 	"personal-finance/utils"
@@ -45,22 +50,43 @@ func New() *App {
 		}
 	})
 
-	// Route groups
-	API := e.Group("/api")
-
-	// Rate limiter
-	rateLimitConfig := getRateLimitConfig()
-	API.Use(middleware.RateLimiterWithConfig(rateLimitConfig))
-
-	// Register feature routes
-	auth.RegisterRoutes(API.Group("/auth"))
-	user.RegisterRoutes(API.Group("/users"))
+	registerRoutes(e)
 
 	a := &App{
 		e:      e,
 		AppCfg: config.Application,
 	}
 	return a
+}
+
+// registerRoutes builds the whole route table. It is separate from New so the
+// public/protected split can be tested without a database or a live config.
+func registerRoutes(e *echo.Echo) {
+	API := e.Group("/api")
+
+	// Rate limiter
+	API.Use(middleware.RateLimiterWithConfig(getRateLimitConfig()))
+
+	// Public routes
+	auth.RegisterRoutes(API.Group("/auth"))
+
+	// Health check, useful for container orchestration
+	API.GET("/health", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, utils.ResponseOK(map[string]string{
+			"status":  "ok",
+			"version": config.Application.Version,
+		}))
+	})
+
+	// Protected routes. Every handler below resolves the caller from the JWT
+	// via utils.GetUserID, so data is always scoped to the signed-in user.
+	protected := API.Group("", utils.JWTMiddleware())
+	user.RegisterRoutes(protected.Group("/users"))
+	account.RegisterRoutes(protected.Group("/accounts"))
+	category.RegisterRoutes(protected.Group("/categories"))
+	transaction.RegisterRoutes(protected.Group("/transactions"))
+	budget.RegisterRoutes(protected.Group("/budgets"))
+	report.RegisterRoutes(protected.Group("/reports"))
 }
 
 // Start starts the HTTP server and cron scheduler

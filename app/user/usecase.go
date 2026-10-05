@@ -49,9 +49,6 @@ func (u *Usecase) GetByID(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, utils.ResponseError("ID tidak valid"))
 	}
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, utils.ResponseError("ID tidak valid"))
-	}
 
 	ctx := c.Request().Context()
 	user, err := u.repo.GetUserByID(ctx, id)
@@ -114,4 +111,50 @@ func (u *Usecase) Delete(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, utils.ResponseOK("Pengguna berhasil dinonaktifkan"))
+}
+
+// Me returns the profile of the authenticated user, resolved from the JWT so
+// the client never has to pass its own ID.
+func (u *Usecase) Me(c echo.Context) error {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, utils.ResponseError("Tidak terautentikasi"))
+	}
+
+	ctx := c.Request().Context()
+	user, err := u.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, utils.ResponseError("Pengguna tidak ditemukan"))
+	}
+
+	return c.JSON(http.StatusOK, utils.ResponseOK(user))
+}
+
+// UpdateMe updates the username of the authenticated user
+func (u *Usecase) UpdateMe(c echo.Context) error {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, utils.ResponseError("Tidak terautentikasi"))
+	}
+
+	apiErr, req := ValidateUpdateInput(c)
+	if apiErr != nil {
+		return c.JSON(http.StatusBadRequest, apiErr)
+	}
+
+	ctx := c.Request().Context()
+	if err := u.repo.UpdateUserUsername(ctx, repository.UpdateUserUsernameParams{
+		ID:       userID,
+		Username: req.Name,
+	}); err != nil {
+		log.Println("UpdateMe - UpdateUserUsername error:", err)
+		return c.JSON(http.StatusInternalServerError, utils.ResponseError("Gagal mengupdate profil"))
+	}
+
+	user, err := u.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return c.JSON(http.StatusOK, utils.ResponseOK("Profil berhasil diupdate"))
+	}
+
+	return c.JSON(http.StatusOK, utils.ResponseOK(user))
 }
