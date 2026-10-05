@@ -25,3 +25,7 @@ CREATE TRIGGER trg_transactions_updated_at
 BEFORE UPDATE ON transactions
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_budgets_updated_at
+BEFORE UPDATE ON budgets
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
